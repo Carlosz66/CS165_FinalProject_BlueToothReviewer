@@ -1,12 +1,9 @@
 package com.example.carlos.finalproject;
 
-import android.*;
 import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -18,12 +15,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -33,20 +25,9 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-
-/**
- * Created by Anja on 11/17/2017.
- */
 
 public class AddActivity extends AppCompatActivity
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, GoogleApiClient.OnConnectionFailedListener,
@@ -56,11 +37,7 @@ public class AddActivity extends AppCompatActivity
     GoogleMap map;
     LocationRequest locationRequest;
     Location lastLocation;
-    Marker meMarker, currentCatMarker;
-    ImageView catPicture;
-    TextView catName, catDistance;
-    Button petButton, trackButton;
-    Marker lastClicked = null;
+    private LatLng activityLngLat;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,21 +82,7 @@ public class AddActivity extends AppCompatActivity
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
 
     @Override
-    public void onLocationChanged(Location location) {
-        lastLocation = location;
-        if (meMarker != null) {
-            meMarker.remove();
-        }
-
-        //Place current location marker
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("Starting Position");
-        meMarker = map.addMarker(markerOptions);
-
-        map.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-    }
+    public void onLocationChanged(Location location) { }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
@@ -158,6 +121,16 @@ public class AddActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
         map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+
+        map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+
+            @Override
+            public void onMapClick(LatLng point) {
+                activityLngLat = point;
+                map.clear();
+                map.addMarker(new MarkerOptions().position(point));
+            }
+        });
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
