@@ -32,4 +32,8 @@ public interface Constants {
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
 
+    //confirm and cancel shared activity
+    public static final int RESULT_CONFIRM =4;
+    public static final int RESULT_DENY =5;
+
 }

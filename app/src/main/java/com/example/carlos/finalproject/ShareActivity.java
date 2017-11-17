@@ -1,6 +1,7 @@
 package com.example.carlos.finalproject;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -14,12 +15,21 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import java.net.Inet4Address;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+
+import static com.example.carlos.finalproject.Constants.RESULT_CONFIRM;
+import static com.example.carlos.finalproject.Constants.RESULT_DENY;
 
 public class ShareActivity extends AppCompatActivity {
     private static final String TAG = "ShareActivity";
@@ -28,11 +38,9 @@ public class ShareActivity extends AppCompatActivity {
     private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
     private static final int REQUEST_ENABLE_BT = 3;
 
-    //bluetooth
-    private BluetoothAdapter mBtAdapter;//for getting the devices
-    private BluetoothAdapter mBluetoothAdapter = null;//for communication
 
-    private Set<BluetoothDevice> pairedDevices;
+    //bluetooth
+    private BluetoothAdapter mBluetoothAdapter = null;//for communication
 
     //String buffer for outgoing messages
     private StringBuffer mOutStringBuffer;
@@ -41,8 +49,15 @@ public class ShareActivity extends AppCompatActivity {
     private BluetoothChatService mChatService = null;
 
     //UI interface
-    Button shareButton;
+    Button tmpButton;
+    ListView listView;
 
+    //share_activity_list
+    List<String> activityList;
+    private ShareActivityAdapter adapter;
+
+    //decide who start the connection
+    private boolean activeRole=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,10 +69,22 @@ public class ShareActivity extends AppCompatActivity {
 
 
     private void viewSetup(){
-        shareButton =  findViewById(R.id.shareButton);
-        shareButton.setOnClickListener(new View.OnClickListener() {
+        //fake some data
+        activityList= new LinkedList<>();
+        activityList.add("Eat lunch at FOCUS --1:00PM");
+        activityList.add("Meeting at Berry Library --2:00PM");
+
+        //listView set up
+        listView = findViewById(R.id.share_activity_list);
+        adapter = new ShareActivityAdapter
+                (this, R.layout.shared_activity_list_cell,activityList);
+        listView.setAdapter(adapter);
+
+        tmpButton=findViewById(R.id.tempButton);
+        tmpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
             public void onClick(View v) {
-                doDiscovery();
+                sendShareActivity();
             }
         });
     }
@@ -65,14 +92,6 @@ public class ShareActivity extends AppCompatActivity {
 
 
     private void blueToothSetUp(){
-        // Register for broadcasts when a device is discovered
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        this.registerReceiver(mReceiver, filter);
-
-        // Register for broadcasts when discovery has finished
-        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        this.registerReceiver(mReceiver, filter);
-
         // Get the local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();// for communication
         // If the adapter is null, then Bluetooth is not supported
@@ -80,117 +99,7 @@ public class ShareActivity extends AppCompatActivity {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             this.finish();
         }
-        mBtAdapter = BluetoothAdapter.getDefaultAdapter();// for getting the devices
 
-
-        // Get a set of currently paired devices
-        pairedDevices= new HashSet<>();
-
-        //setupChat();
-        //checkBonded();
-
-    }
-
-
-
-
-
-
-    private void doDiscovery() {
-        pairedDevices.clear();
-        Log.d(TAG, "doDiscovery()");
-        // Register for broadcasts when a device is discovered
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        this.registerReceiver(mReceiver, filter);
-
-        // Register for broadcasts when discovery has finished
-        filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        this.registerReceiver(mReceiver, filter);
-
-        // Indicate scanning in the title
-        setProgressBarIndeterminateVisibility(true);
-        setTitle(R.string.scanning);
-
-
-        // If we're already discovering, stop it
-        if (mBtAdapter.isDiscovering()) {
-            mBtAdapter.cancelDiscovery();
-        }
-
-        // Request discover from BluetoothAdapter
-        mBtAdapter.startDiscovery();
-    }
-
-
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-            // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // If it's already paired, skip it, because it's been listed already
-                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                    pairedDevices.add(device);
-                    Log.d(TAG,device.getName() + "\n" + device.getAddress());
-
-                }
-
-                // When discovery is finished, change the Activity title
-            } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                setProgressBarIndeterminateVisibility(false);
-                setTitle(R.string.select_device);
-                Log.d(TAG,"Device Search End");
-
-                Set<BluetoothDevice> tmp = mBtAdapter.getBondedDevices();
-
-                for(BluetoothDevice device :tmp) {
-                    pairedDevices.add(device);
-                    Log.d(TAG,"Bonded Device:"+device.getName()+device.getAddress());
-                }
-                //pairedDevices=mBtAdapter.getBondedDevices();
-                checkBonded();
-            }
-        }
-    };
-
-    //to check every device and share it with then; first time do this checking, calling this
-    private void checkBonded(){
-        this.unregisterReceiver(mReceiver);
-        BluetoothDevice tmpDevice=null;
-        for (BluetoothDevice device : pairedDevices) {
-            /*if(device.getAddress().compareTo("44:80:EB:A6:2F:E0")==0){
-                Log.d(TAG,"Find the phone: "+device.getName());
-                connectDevice(device.getAddress(),false);
-                break;
-            }*/
-            Log.d(TAG,"Find the phone: "+device.getName());
-            connectDevice(device.getAddress(),false);
-            tmpDevice=device;
-            break;
-        }
-        if(tmpDevice!=null)
-            pairedDevices.remove(tmpDevice);
-    }
-
-    //to check every device and share it with then; after first time do this checking, calling this
-    private void secondCheckBonded(){
-        BluetoothDevice tmpDevice=null;
-        for (BluetoothDevice device : pairedDevices) {
-            /*if(device.getAddress().compareTo("44:80:EB:A6:2F:E0")==0){
-                Log.d(TAG,"Find the phone: "+device.getName());
-                connectDevice(device.getAddress(),false);
-                break;
-            }*/
-            Log.d(TAG,"Find the phone: "+device.getName());
-            connectDevice(device.getAddress(),false);
-            tmpDevice=device;
-            break;
-        }
-        if(tmpDevice!=null)
-            pairedDevices.remove(tmpDevice);
     }
 
 
@@ -200,16 +109,16 @@ public class ShareActivity extends AppCompatActivity {
     private void setupChat() {
         Log.d(TAG, "setupChat()");
 
-        //sendMessage(message);
 
         // Initialize the BluetoothChatService to perform bluetooth connections
         mChatService = new BluetoothChatService(this, mHandler);
-        mChatService.start();
+        //mChatService.start();
 
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
     }
 
+    private String receivedAct=null;
     /**
      * The Handler that gets information back from the BluetoothChatService
      */
@@ -222,8 +131,6 @@ public class ShareActivity extends AppCompatActivity {
                     switch (msg.arg1) {
                         case BluetoothChatService.STATE_CONNECTED:
                             Log.d(TAG, "connected!!!!!!!!!!!!!!!!!!!!!!");
-                            //Toast.makeText(getApplicationContext(), "STATE_CONNECTED", Toast.LENGTH_LONG).show();
-                            doThings();
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
                             //Toast.makeText(getApplicationContext(), "STATE_CONNECTING", Toast.LENGTH_LONG).show();
@@ -239,14 +146,18 @@ public class ShareActivity extends AppCompatActivity {
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
                     Log.d(TAG,writeMessage);
-                    Toast.makeText(getApplicationContext(), "write "+writeMessage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "write: "+writeMessage, Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     Log.d(TAG,readMessage);
-                    Toast.makeText(getApplicationContext(), "read "+readMessage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "read: "+readMessage, Toast.LENGTH_LONG).show();
+                    if (!readMessage.isEmpty()){
+                        startConfirmReceivedTask(readMessage);
+                    }
+                    mChatService.start();
                     break;
                 case Constants.MESSAGE_DEVICE_NAME:
                     // save the connected device's name
@@ -258,10 +169,7 @@ public class ShareActivity extends AppCompatActivity {
                     break;
                 case Constants.MESSAGE_TOAST:
                     if (null != this) {
-                        if(msg.getData().getString(Constants.TOAST).compareTo("Unable to connect device")==0){
-                            secondCheckBonded();
-                            Log.d(TAG,"unable to,,,,,,try to connect others");
-                        }
+                        activeRole=false;
                         Toast.makeText(getApplicationContext(), msg.getData().getString(Constants.TOAST),
                                 Toast.LENGTH_SHORT).show();
                     }
@@ -270,10 +178,6 @@ public class ShareActivity extends AppCompatActivity {
         }
     };
 
-    private void doThings(){
-        Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
-        sendMessage("hello world");
-    }
 
     /**
      * Sends a message.
@@ -342,16 +246,73 @@ public class ShareActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        // Make sure we're not doing discovery anymore
-        if (mBtAdapter != null) {
-            mBtAdapter.cancelDiscovery();
-        }
-
-        // Unregister broadcast listeners
-        this.unregisterReceiver(mReceiver);
-
         if (mChatService != null) {
             mChatService.stop();
         }
+    }
+
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_CONNECT_DEVICE_SECURE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    String addr = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                    if (addr!=null) {
+                        connectDevice(addr, true);
+                        activeRole=true;
+                    }
+                }
+                break;
+            case REQUEST_CONNECT_DEVICE_INSECURE:
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    String addr = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                    if (addr!=null) {
+                        connectDevice(addr, false);
+                        activeRole=true;
+                    }
+                }
+                break;
+        }
+
+        switch (resultCode){
+            case RESULT_CONFIRM:
+                //Log.d(TAG,"add activity");
+                if(receivedAct!=null) {
+                    activityList.add(receivedAct);
+                    Log.d(TAG,"add activity");
+                    adapter.notifyDataSetChanged();
+                }
+                receivedAct=null;
+                break;
+            case RESULT_DENY:
+                receivedAct=null;
+                break;
+        }
+    }
+
+    private int mPosition=0;
+    public void shareActivityTo(int position){
+        mPosition=position;
+        Intent intent = new Intent(getApplicationContext(), DeviceListActivity.class);
+        startActivityForResult(intent,REQUEST_CONNECT_DEVICE_INSECURE);
+    }
+
+    private void sendShareActivity(){
+        Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
+        if(activeRole!=true)
+            return;
+        if(!activityList.isEmpty() &&  mPosition<activityList.size())
+            sendMessage(activityList.get(mPosition));
+        else
+            sendMessage("nothing");
+    }
+
+    private void startConfirmReceivedTask(String readMessage){
+        receivedAct=readMessage;
+        Intent intent = new Intent(getApplicationContext(), AddSharedTaskActivity.class);
+        intent.putExtra("activityDecription",receivedAct);
+        startActivityForResult(intent,1);
     }
 }
