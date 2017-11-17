@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">FinalProject</string>
 
+    <string name="package_name">com.example.carlos.finalproject</string>
 
     <!--  DeviceListActivity -->
     <string name="scanning">scanning for devices...</string>
