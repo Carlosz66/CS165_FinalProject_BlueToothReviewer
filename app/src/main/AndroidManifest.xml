@@ -35,6 +35,18 @@
             android:name=".AddSharedTaskActivity"
             android:configChanges="orientation|keyboardHidden"
             android:theme="@android:style/Theme.Holo.Dialog"/>
+        <activity
+            android:name=".AddActivity"
+            android:windowSoftInputMode="adjustNothing"
+            android:configChanges="orientation|keyboardHidden"/>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAkaphuE8kPdQoTch8uqjKeMnePysovfro"/>
     </application>
 
 </manifest>

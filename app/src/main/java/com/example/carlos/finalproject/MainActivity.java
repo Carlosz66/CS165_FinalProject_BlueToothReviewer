@@ -14,7 +14,7 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button shareButton;
+    Button shareButton, addActivityButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,10 +31,21 @@ public class MainActivity extends AppCompatActivity {
                 startActivityForResult(intent,1);
             }
         });
+
+        addActivityButton = findViewById(R.id.addActivityButton);
+        addActivityButton.setOnClickListener(new View.OnClickListener() {
+
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), AddActivity.class);
+                startActivityForResult(intent,2);
+            }
+        });
+
     }
 
     private void startDatabaseDemo() {
         DatabaseHelper myDbHelper = new DatabaseHelper(this);
+
 
         try {
             myDbHelper.openDataBase();
@@ -51,19 +62,25 @@ public class MainActivity extends AppCompatActivity {
 
         String message = "";
 
-        if (cursor.moveToFirst()){
-            do {
-                String locationName = cursor.getString(cursor.getColumnIndex("LocationName"));
-                String activityName = cursor.getString(cursor.getColumnIndex("ActivityName"));
-                String startTime = cursor.getString(cursor.getColumnIndex("StartTime"));
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    String locationName = cursor.getString(cursor.getColumnIndex("LocationName"));
+                    String activityName = cursor.getString(cursor.getColumnIndex("ActivityName"));
+                    String startTime = cursor.getString(cursor.getColumnIndex("StartTime"));
 
-                message = activityName + " at " + locationName + " starting at " + startTime;
+                    message = activityName + " at " + locationName + " starting at " + startTime;
+                }
+
+                while (cursor.moveToNext());
+                cursor.close();
             }
-
-            while (cursor.moveToNext());
         }
 
-        cursor.close();
+        finally {
+            cursor.close();
+            myDbHelper.close();
+        }
 
         Toast.makeText(this, "Database demo: " + message, Toast.LENGTH_LONG).show();
     }

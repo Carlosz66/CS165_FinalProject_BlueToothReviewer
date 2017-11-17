@@ -17,7 +17,13 @@
             tools:layout_editor_absoluteX="141dp"
             tools:layout_editor_absoluteY="153dp"
             android:layout_gravity="center_horizontal"/>
+        <Button
+            android:id="@+id/addActivityButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Activity"/>
     </LinearLayout>
+
 
 
 </android.support.constraint.ConstraintLayout>
