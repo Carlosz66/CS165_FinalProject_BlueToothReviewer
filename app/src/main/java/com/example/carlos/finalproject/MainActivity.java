@@ -7,11 +7,16 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -26,29 +31,30 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        shareButton = findViewById(R.id.shareButton);
-        shareButton.setOnClickListener(new View.OnClickListener() {
+        LinearLayout scheduleButton = (LinearLayout)findViewById(R.id.button_layout);
+        scheduleButton.setOnClickListener(new View.OnClickListener() {
 
+            @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), ShareActivity.class);
                 startActivityForResult(intent,1);
             }
         });
 
-        addActivityButton = findViewById(R.id.addActivityButton);
-        addActivityButton.setOnClickListener(new View.OnClickListener() {
+        //TODO: Change to go to report page, link add activity to share activity
+        LinearLayout reportButton = (LinearLayout)findViewById(R.id.report_layout);
+        reportButton.setOnClickListener(new View.OnClickListener() {
 
+            @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), AddActivity.class);
-                startActivityForResult(intent,2);
+                startActivityForResult(intent,1);
             }
         });
 
 
 //        Intent trackingService = new Intent(MainActivity.this,LocationService.class);
 //        startService(trackingService);
-
-
 
         checkPermissions();
     }
