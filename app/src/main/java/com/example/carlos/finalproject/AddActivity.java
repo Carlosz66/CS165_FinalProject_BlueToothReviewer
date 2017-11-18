@@ -69,8 +69,10 @@ public class AddActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        checkWriteStoragePermissions();
+
         setTitle("Add Activity");
-        showActivities();
+        //showActivities();
 
         activityNameEditText = findViewById(R.id.activityNameEditText);
         activityLocationEditText = findViewById(R.id.activityLocationEditText);
@@ -105,6 +107,7 @@ public class AddActivity extends AppCompatActivity
                 onAddButtonClicked();
             }
         });
+
     }
 
     // converts military time to AM/PM
@@ -250,6 +253,30 @@ public class AddActivity extends AppCompatActivity
                 return;
             }
         }
+
+        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            //
+        }else if (grantResults[0] == PackageManager.PERMISSION_DENIED){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    //Show an explanation to the user *asynchronously*
+                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+                    builder.setMessage("This permission is important for the app.")
+                            .setTitle("Important permission required");
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+                            }
+
+                        }
+                    });
+                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+                }else{
+                    //Never ask again and handle your app without permission.
+                }
+            }
+        }
     }
 
     @Override
@@ -326,6 +353,15 @@ public class AddActivity extends AppCompatActivity
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                         MY_PERMISSIONS_REQUEST_LOCATION);
             }
+        }
+    }
+
+    private void checkWriteStoragePermissions(){
+        if(Build.VERSION.SDK_INT < 23)
+            return;
+
+        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         }
     }
 }
