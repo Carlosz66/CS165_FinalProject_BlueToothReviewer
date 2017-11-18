@@ -69,7 +69,6 @@ public class AddActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        checkWriteStoragePermissions();
 
         setTitle("Add Activity");
         //showActivities();
@@ -119,6 +118,7 @@ public class AddActivity extends AppCompatActivity
     }
 
     private void onAddButtonClicked() {
+        showActivities();
         if (activityNameEditText.getText().length() == 0) {
             Toast.makeText(this, "Please enter valid values in all fields.", Toast.LENGTH_SHORT).show();
         }
@@ -163,6 +163,7 @@ public class AddActivity extends AppCompatActivity
         myDbHelper.close();
         Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
 
+
         // Back to Main Activity
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivityForResult(intent,1);
@@ -181,10 +182,9 @@ public class AddActivity extends AppCompatActivity
         try {
             if (cursor2.moveToFirst()) {
                 do {
-                    message = message + " - " + cursor2.getString(0);
-                }
-
-                while (cursor2.moveToNext());
+                    message = message + " --------- " + cursor2.getString(0) +','+ cursor2.getString(1)
+                            +','+ cursor2.getString(2)+','+ cursor2.getString(3)+','+ cursor2.getString(4);
+                }while (cursor2.moveToNext());
                 cursor2.close();
             }
         } finally {
@@ -251,30 +251,6 @@ public class AddActivity extends AppCompatActivity
                     Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
                 }
                 return;
-            }
-        }
-
-        if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            //
-        }else if (grantResults[0] == PackageManager.PERMISSION_DENIED){
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    //Show an explanation to the user *asynchronously*
-                    android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-                    builder.setMessage("This permission is important for the app.")
-                            .setTitle("Important permission required");
-                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-                            }
-
-                        }
-                    });
-                    requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-                }else{
-                    //Never ask again and handle your app without permission.
-                }
             }
         }
     }
@@ -356,12 +332,4 @@ public class AddActivity extends AppCompatActivity
         }
     }
 
-    private void checkWriteStoragePermissions(){
-        if(Build.VERSION.SDK_INT < 23)
-            return;
-
-        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
-        }
-    }
 }
