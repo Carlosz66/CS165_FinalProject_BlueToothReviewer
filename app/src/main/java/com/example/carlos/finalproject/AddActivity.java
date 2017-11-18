@@ -165,8 +165,7 @@ public class AddActivity extends AppCompatActivity
 
 
         // Back to Main Activity
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        startActivityForResult(intent,1);
+        finish();
     }
 
     public void showActivities() {
@@ -174,6 +173,12 @@ public class AddActivity extends AppCompatActivity
         //TODO: remove
 
         DatabaseHelper myDbHelper = new DatabaseHelper(this);
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
         myDbHelper.openDataBase();
         String query2 = "SELECT * FROM ScheduledActivity";
         Cursor cursor2 = myDbHelper.getWritableDatabase().rawQuery(query2, null);

@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.nfc.Tag;
 import android.os.Handler;
 import android.os.Message;
@@ -23,6 +24,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -78,6 +80,13 @@ public class ShareActivity extends AppCompatActivity {
         activityList= new LinkedList<>();
 
         DatabaseHelper myDbHelper = new DatabaseHelper(this);
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
         myDbHelper.openDataBase();
         String query2 = "SELECT * FROM ScheduledActivity";
         Cursor cursor2 = myDbHelper.getWritableDatabase().rawQuery(query2, null);
@@ -309,9 +318,13 @@ public class ShareActivity extends AppCompatActivity {
                 //Log.d(TAG,"add activity");
                 if(receivedAct!=null) {
                     Gson  gson = new Gson();
-                    activityList.add(gson.fromJson(receivedAct,ActivityInfo.class));
+                    ActivityInfo act  = gson.fromJson(receivedAct,ActivityInfo.class);
+                    //to update the view
+                    activityList.add(act);
                     Log.d(TAG,"add activity");
                     adapter.notifyDataSetChanged();
+                    //to database
+                    addActivityToDb(act);
                 }
                 receivedAct=null;
                 break;
@@ -344,5 +357,37 @@ public class ShareActivity extends AppCompatActivity {
         Intent intent = new Intent(getApplicationContext(), AddSharedTaskActivity.class);
         intent.putExtra("activityDecription",receivedAct);
         startActivityForResult(intent,1);
+    }
+
+    private void addActivityToDb(ActivityInfo act) {
+        DatabaseHelper myDbHelper = new DatabaseHelper(this);
+
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
+        try {
+            myDbHelper.openDataBase();
+        }
+
+        catch (SQLException sqle) {
+            Toast.makeText(this, "Cannot connect to the database.", Toast.LENGTH_LONG).show();
+            throw sqle;
+        }
+
+        String query = "INSERT INTO ScheduledActivity (ActivityName, LocationName, LocationLon, LocationLat, StartTime) " +
+                " VALUES ('" + act.actName + "','" + act.locName + "'," +
+                act.lng + "," + act.lat + ",'" +
+                act.actTime + "')";
+
+        Cursor cursor = myDbHelper.getWritableDatabase().rawQuery(query, null);
+        cursor.moveToFirst();
+
+        cursor.close();
+        myDbHelper.close();
+        Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
     }
 }

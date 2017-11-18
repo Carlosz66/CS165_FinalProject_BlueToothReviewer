@@ -43,8 +43,7 @@ public class ShareActivityAdapter extends ArrayAdapter<ActivityInfo> {
         TextView actDes = view.findViewById(R.id.shareActivityInCell);
         Button shaButton = view.findViewById(R.id.shareButtonInCell);
 
-        actDes.setText("Activity: "+activityDes.actName +'\n'+"Location: "+activityDes.locName+'\n'
-        +"Time: "+activityDes.actTime);
+        actDes.setText("Activity: "+activityDes.actName +'\n'+"Location: "+activityDes.locName+'\n'+"Time: "+activityDes.actTime);
         shaButton.setOnClickListener(myListener);
 
         return view;
