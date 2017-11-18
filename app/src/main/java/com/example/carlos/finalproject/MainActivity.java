@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.SQLException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -14,7 +15,7 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
 
-    Button shareButton, addActivityButton;
+    Button shareButton, addActivityButton, startTracking;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,9 +40,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        Intent trackingService = new Intent(MainActivity.this,LocationService.class);
-//        startService(trackingService);
-
-
+        startTracking = findViewById(R.id.startTrackingButton);
+        startTracking.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent trackingService = new Intent(MainActivity.this, LocationService.class);
+                startService(trackingService);
+                Log.d("start tracking","main");
+            }
+        });
     }
 }

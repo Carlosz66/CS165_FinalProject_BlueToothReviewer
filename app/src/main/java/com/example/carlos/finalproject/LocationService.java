@@ -12,6 +12,7 @@ import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.widget.Toast;
 
 
 public class LocationService extends Service {
@@ -22,6 +23,8 @@ public class LocationService extends Service {
     private Handler mHandler;
     private Runnable onRequestLocation;
     private int cnt;
+
+    private Location LastKnownLocation, curLocation;
 
     public LocationService() {
 
@@ -36,6 +39,10 @@ public class LocationService extends Service {
         mLocationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
+                curLocation = location;
+                String str = location.toString();
+                updateDB(location);
+                Log.d("cur location",str);
                 mLocationManager.removeUpdates(mLocationListener);
             }
 
@@ -54,8 +61,9 @@ public class LocationService extends Service {
             @Override
             public void run() {
                 // Ask for a location
+
+                Toast.makeText(getApplication(),"the"+cnt+"time update location",Toast.LENGTH_SHORT).show();
                 cnt++;
-                Log.d("update every minute",cnt+"");
                 if (ActivityCompat.checkSelfPermission(getApplication(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                         && ActivityCompat.checkSelfPermission(getApplication(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     // TODO: Consider calling
@@ -63,14 +71,21 @@ public class LocationService extends Service {
                     return;
                 }
                 mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-                mHandler.postDelayed(onRequestLocation, DateUtils.MINUTE_IN_MILLIS);
+                mHandler.postDelayed(onRequestLocation, DateUtils.SECOND_IN_MILLIS);
             }
         };
+
+        mHandler.post(onRequestLocation);
+
 
 
         return START_STICKY;
     }
 
+
+    private void updateDB(Location location){
+
+    }
 
     @Override
     public IBinder onBind(Intent intent) {
