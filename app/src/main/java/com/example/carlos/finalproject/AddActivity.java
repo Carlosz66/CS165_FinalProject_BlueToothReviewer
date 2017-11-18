@@ -70,7 +70,7 @@ public class AddActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
         setTitle("Add Activity");
-        showActivities();
+        //showActivities();
 
         activityNameEditText = findViewById(R.id.activityNameEditText);
         activityLocationEditText = findViewById(R.id.activityLocationEditText);
