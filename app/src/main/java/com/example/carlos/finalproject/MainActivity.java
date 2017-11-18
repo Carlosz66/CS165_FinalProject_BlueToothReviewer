@@ -39,5 +39,9 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+//        Intent trackingService = new Intent(MainActivity.this,LocationService.class);
+//        startService(trackingService);
+
+
     }
 }
