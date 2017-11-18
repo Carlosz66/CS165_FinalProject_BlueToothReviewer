@@ -20,11 +20,7 @@ public class ShareActivityAdapter extends ArrayAdapter<ActivityInfo> {
     private int resourceId;
 
     public ShareActivity delegate;
-    /**
-     *context:当前活动上下文
-     *textViewResourceId:ListView子项布局的ID
-     *objects：要适配的数据
-     */
+
     public ShareActivityAdapter(Context context, int textViewResourceId,
                           List<ActivityInfo> objects) {
         super(context, textViewResourceId, objects);
@@ -43,8 +39,7 @@ public class ShareActivityAdapter extends ArrayAdapter<ActivityInfo> {
         TextView actDes = view.findViewById(R.id.shareActivityInCell);
         Button shaButton = view.findViewById(R.id.shareButtonInCell);
 
-        actDes.setText("Activity: "+activityDes.actName +'\n'+"Location: "+activityDes.locName+'\n'
-        +"Time: "+activityDes.actTime);
+        actDes.setText("Activity: "+activityDes.actName +'\n'+"Location: "+activityDes.locName+'\n'+"Time: "+activityDes.actTime);
         shaButton.setOnClickListener(myListener);
 
         return view;

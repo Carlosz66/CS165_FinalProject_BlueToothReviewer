@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.database.SQLException;
 import android.nfc.Tag;
 import android.os.Handler;
 import android.os.Message;
@@ -23,6 +24,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -63,6 +65,12 @@ public class ShareActivity extends AppCompatActivity {
     //decide who start the connection
     private boolean activeRole=false;
 
+    //bluetooth communication buffer
+    private String receivedAct=null;
+
+    //indicate which button user click
+    private int mPosition=0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,12 +80,20 @@ public class ShareActivity extends AppCompatActivity {
         blueToothSetUp();
     }
 
+    //read activity data from database
     public void readActivityDataFromDatabase() {
         // Displays all activities in a Toast
 
         activityList= new LinkedList<>();
 
         DatabaseHelper myDbHelper = new DatabaseHelper(this);
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
         myDbHelper.openDataBase();
         String query2 = "SELECT * FROM ScheduledActivity";
         Cursor cursor2 = myDbHelper.getWritableDatabase().rawQuery(query2, null);
@@ -100,7 +116,7 @@ public class ShareActivity extends AppCompatActivity {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
-
+    //set up the views
     private void viewSetup(){
         //listView set up
         listView = findViewById(R.id.share_activity_list);
@@ -118,7 +134,7 @@ public class ShareActivity extends AppCompatActivity {
     }
 
 
-
+    //set up the bluetooth
     private void blueToothSetUp(){
         // Get the local Bluetooth adapter
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();// for communication
@@ -131,9 +147,7 @@ public class ShareActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * Set up the UI and background operations for chat.
-     */
+    //set up for bluetooth communication
     private void setupChat() {
         Log.d(TAG, "setupChat()");
 
@@ -146,10 +160,9 @@ public class ShareActivity extends AppCompatActivity {
         mOutStringBuffer = new StringBuffer("");
     }
 
-    private String receivedAct=null;
-    /**
-     * The Handler that gets information back from the BluetoothChatService
-     */
+
+
+    //The Handler that gets information back from the BluetoothChatService
     @SuppressLint("HandlerLeak")
     private final Handler mHandler = new Handler() {
         @Override
@@ -231,7 +244,7 @@ public class ShareActivity extends AppCompatActivity {
         }
     }
 
-
+    //connect another device through bluetooth
     private void connectDevice(String address, boolean secure) {
         // Get the BluetoothDevice object
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
@@ -304,14 +317,18 @@ public class ShareActivity extends AppCompatActivity {
                 break;
         }
 
+        //result back from AddSharedTaskActivity
         switch (resultCode){
             case RESULT_CONFIRM:
-                //Log.d(TAG,"add activity");
                 if(receivedAct!=null) {
                     Gson  gson = new Gson();
-                    activityList.add(gson.fromJson(receivedAct,ActivityInfo.class));
+                    ActivityInfo act  = gson.fromJson(receivedAct,ActivityInfo.class);
+                    //to update the view
+                    activityList.add(act);
                     Log.d(TAG,"add activity");
                     adapter.notifyDataSetChanged();
+                    //to database
+                    addActivityToDb(act);
                 }
                 receivedAct=null;
                 break;
@@ -321,13 +338,14 @@ public class ShareActivity extends AppCompatActivity {
         }
     }
 
-    private int mPosition=0;
+    //start the DeviceListActivity for choosing the device to connect through bluetooth
     public void shareActivityTo(int position){
         mPosition=position;
         Intent intent = new Intent(getApplicationContext(), DeviceListActivity.class);
         startActivityForResult(intent,REQUEST_CONNECT_DEVICE_INSECURE);
     }
 
+    //send the activity info through bluetooth as JSON
     private void sendShareActivity(){
         Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
         if(activeRole!=true)
@@ -339,10 +357,44 @@ public class ShareActivity extends AppCompatActivity {
             sendMessage("nothing");
     }
 
+    //after receive the message, start AddSharedTaskActivity to confirm or deny the activity
     private void startConfirmReceivedTask(String readMessage){
         receivedAct=readMessage;
         Intent intent = new Intent(getApplicationContext(), AddSharedTaskActivity.class);
         intent.putExtra("activityDecription",receivedAct);
         startActivityForResult(intent,1);
+    }
+
+    //write the activity to database
+    private void addActivityToDb(ActivityInfo act) {
+        DatabaseHelper myDbHelper = new DatabaseHelper(this);
+
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
+        try {
+            myDbHelper.openDataBase();
+        }
+
+        catch (SQLException sqle) {
+            Toast.makeText(this, "Cannot connect to the database.", Toast.LENGTH_LONG).show();
+            throw sqle;
+        }
+
+        String query = "INSERT INTO ScheduledActivity (ActivityName, LocationName, LocationLon, LocationLat, StartTime) " +
+                " VALUES ('" + act.actName + "','" + act.locName + "'," +
+                act.lng + "," + act.lat + ",'" +
+                act.actTime + "')";
+
+        Cursor cursor = myDbHelper.getWritableDatabase().rawQuery(query, null);
+        cursor.moveToFirst();
+
+        cursor.close();
+        myDbHelper.close();
+        Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
     }
 }
