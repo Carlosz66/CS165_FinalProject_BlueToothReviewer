@@ -1,6 +1,7 @@
 package com.example.carlos.finalproject;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -102,7 +103,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             myDataBase.close();
 
         super.close();
-
     }
 
     @Override

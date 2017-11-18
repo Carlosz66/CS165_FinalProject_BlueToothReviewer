@@ -21,8 +21,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        startDatabaseDemo();
-
         shareButton = findViewById(R.id.shareButton);
         shareButton.setOnClickListener(new View.OnClickListener() {
 
@@ -41,47 +39,5 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-    private void startDatabaseDemo() {
-        DatabaseHelper myDbHelper = new DatabaseHelper(this);
-
-
-        try {
-            myDbHelper.openDataBase();
-            Toast.makeText(this, "Connected successfully!", Toast.LENGTH_SHORT).show();
-        }
-
-        catch (SQLException sqle) {
-            Toast.makeText(this, "Cannot connect to the database.", Toast.LENGTH_LONG).show();
-            throw sqle;
-        }
-
-        String query = "select LocationName, ActivityName, StartTime from ScheduledActivity";
-        Cursor cursor = myDbHelper.getReadableDatabase().rawQuery(query, null);
-
-        String message = "";
-
-        try {
-            if (cursor.moveToFirst()) {
-                do {
-                    String locationName = cursor.getString(cursor.getColumnIndex("LocationName"));
-                    String activityName = cursor.getString(cursor.getColumnIndex("ActivityName"));
-                    String startTime = cursor.getString(cursor.getColumnIndex("StartTime"));
-
-                    message = activityName + " at " + locationName + " starting at " + startTime;
-                }
-
-                while (cursor.moveToNext());
-                cursor.close();
-            }
-        }
-
-        finally {
-            cursor.close();
-            myDbHelper.close();
-        }
-
-        Toast.makeText(this, "Database demo: " + message, Toast.LENGTH_LONG).show();
     }
 }

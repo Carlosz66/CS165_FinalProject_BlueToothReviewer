@@ -1,9 +1,14 @@
 package com.example.carlos.finalproject;
 
 import android.Manifest;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -15,6 +20,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.format.DateFormat;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -29,6 +40,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.IOException;
+import java.sql.Time;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 public class AddActivity extends AppCompatActivity
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener, GoogleApiClient.OnConnectionFailedListener,
         LocationListener, GoogleApiClient.ConnectionCallbacks {
@@ -37,7 +54,12 @@ public class AddActivity extends AppCompatActivity
     GoogleMap map;
     LocationRequest locationRequest;
     Location lastLocation;
+    Button addActivityButton, setTimeButton;
+    EditText activityNameEditText, activityTimeEditText, activityLocationEditText;
+    TextView timeLabel;
     private LatLng activityLngLat;
+    TimePicker timePicker;
+    String selectedTime;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,16 +70,126 @@ public class AddActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
         setTitle("Add Activity");
-        //startDatabaseDemo();
+        showActivities();
 
-//        shareButton = findViewById(R.id.shareButton);
-//        shareButton.setOnClickListener(new View.OnClickListener() {
-//
-//            public void onClick(View v) {
-//                Intent intent = new Intent(getApplicationContext(), ShareActivity.class);
-//                startActivityForResult(intent,1);
-//            }
-//        });
+        activityNameEditText = findViewById(R.id.activityNameEditText);
+        activityLocationEditText = findViewById(R.id.activityLocationEditText);
+
+        String delegate = "hh:mm aaa";
+        String currentTime = (String)DateFormat.format(delegate, Calendar.getInstance().getTime());
+
+
+        timeLabel = findViewById(R.id.timeLabel);
+        timeLabel.setText(currentTime);
+
+        addActivityButton = findViewById(R.id.addButton);
+        setTimeButton = findViewById(R.id.setTimeButton);
+
+        final Context context = this;
+
+        setTimeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                TimePickerDialog dialog = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
+                    @Override
+                    public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
+                        selectedTime = String.valueOf(selectedHour) + ":" + String.valueOf(selectedMinute);
+                        timeLabel.setText(getTime(selectedHour, selectedMinute));
+                    }
+                }, 12, 0, false);
+                dialog.show();
+            }
+        });
+
+        addActivityButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                onAddButtonClicked();
+            }
+        });
+    }
+
+    // converts military time to AM/PM
+    private String getTime(int hr,int min) {
+        Time time = new Time(hr,min,0);//seconds by default set to zero
+        Format formatter;
+        formatter = new SimpleDateFormat("h:mm a");
+        return formatter.format(time);
+    }
+
+    private void onAddButtonClicked() {
+        if (activityNameEditText.getText().length() == 0) {
+            Toast.makeText(this, "Please enter valid values in all fields.", Toast.LENGTH_SHORT).show();
+        }
+
+        else if (activityLngLat == null) {
+            Toast.makeText(this, "Please select location on map", Toast.LENGTH_SHORT).show();
+        }
+
+        else {
+            addActivityToDb();
+        }
+    }
+
+    private void addActivityToDb() {
+        DatabaseHelper myDbHelper = new DatabaseHelper(this);
+
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
+        try {
+            myDbHelper.openDataBase();
+        }
+
+        catch (SQLException sqle) {
+            Toast.makeText(this, "Cannot connect to the database.", Toast.LENGTH_LONG).show();
+            throw sqle;
+        }
+
+        String query = "INSERT INTO ScheduledActivity (ActivityName, LocationName, LocationLon, LocationLat, StartTime) " +
+                " VALUES ('" + activityNameEditText.getText() + "','" + activityLocationEditText.getText() + "'," +
+                String.valueOf(activityLngLat.longitude) + "," + String.valueOf(activityLngLat.longitude) + ",'" +
+                selectedTime + "')";
+
+        Cursor cursor = myDbHelper.getWritableDatabase().rawQuery(query, null);
+        cursor.moveToFirst();
+
+        cursor.close();
+        myDbHelper.close();
+        Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
+
+        // Back to Main Activity
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        startActivityForResult(intent,1);
+    }
+
+    public void showActivities() {
+        // Displays all activities in a Toast
+        //TODO: remove
+
+        DatabaseHelper myDbHelper = new DatabaseHelper(this);
+        myDbHelper.openDataBase();
+        String query2 = "SELECT * FROM ScheduledActivity";
+        Cursor cursor2 = myDbHelper.getWritableDatabase().rawQuery(query2, null);
+        String message = "";
+
+        try {
+            if (cursor2.moveToFirst()) {
+                do {
+                    message = message + " - " + cursor2.getString(0);
+                }
+
+                while (cursor2.moveToNext());
+                cursor2.close();
+            }
+        } finally {
+            cursor2.close();
+            myDbHelper.close();
+        }
+
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     //TODO: Check permissions on app start
@@ -76,13 +208,16 @@ public class AddActivity extends AppCompatActivity
     }
 
     @Override
-    public void onConnectionSuspended(int i) { }
+    public void onConnectionSuspended(int i) {
+    }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+    }
 
     @Override
-    public void onLocationChanged(Location location) { }
+    public void onLocationChanged(Location location) {
+    }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
@@ -143,7 +278,7 @@ public class AddActivity extends AppCompatActivity
                 if (lastLocation != null) {
                     latLng = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
                 }
-                map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,17));
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
 
             } else {
                 checkLocationPermission();
@@ -164,6 +299,7 @@ public class AddActivity extends AppCompatActivity
     }
 
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+
     private void checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -179,7 +315,7 @@ public class AddActivity extends AppCompatActivity
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 ActivityCompat.requestPermissions(AddActivity.this,
                                         new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                                        MY_PERMISSIONS_REQUEST_LOCATION );
+                                        MY_PERMISSIONS_REQUEST_LOCATION);
                             }
                         })
                         .create()
@@ -188,7 +324,7 @@ public class AddActivity extends AppCompatActivity
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        MY_PERMISSIONS_REQUEST_LOCATION );
+                        MY_PERMISSIONS_REQUEST_LOCATION);
             }
         }
     }

@@ -15,9 +15,8 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:orientation="vertical"
-                android:layout_weight="5">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -28,40 +27,57 @@
                     android:text="Add Activity"/>
 
                 <EditText
+                    android:id="@+id/activityNameEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
+                    android:layout_margin="7dp"
                     android:hint="Activity Name"/>
 
-                <EditText
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:hint="Time"/>
+                    android:layout_height="wrap_content">
+                    <Button
+                        android:id="@+id/setTimeButton"
+                        android:layout_height="wrap_content"
+                        android:layout_width="wrap_content"
+                        android:layout_margin="7dp"
+                        android:text="Set Activity Time"/>
+
+                    <TextView
+                        android:id="@+id/timeLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="12:00 AM"
+                        android:textSize="20dp"
+                        android:layout_margin="10dp"
+                        android:layout_gravity="center_vertical"/>
+
+                </LinearLayout>
 
                 <EditText
+                    android:id="@+id/activityLocationEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_margin="10dp"
-                    android:hint="Location (enter address/find on map)"/>
+                    android:layout_margin="7dp"
+                    android:hint="Location Name"/>
             </LinearLayout>
 
             <fragment xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:tools="http://schemas.android.com/tools"
                 android:id="@+id/map"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
+                android:layout_height="250dp"
                 android:layout_margin="10dp"
-                android:layout_weight="4"
                 android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
             <RelativeLayout
                 android:layout_width="wrap_content"
-                android:layout_height="0dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_weight="1">
+                android:layout_marginBottom="20dp">
 
                 <Button
+                    android:id="@+id/addButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Add" />
