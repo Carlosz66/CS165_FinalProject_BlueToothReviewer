@@ -20,11 +20,7 @@ public class ShareActivityAdapter extends ArrayAdapter<ActivityInfo> {
     private int resourceId;
 
     public ShareActivity delegate;
-    /**
-     *context:当前活动上下文
-     *textViewResourceId:ListView子项布局的ID
-     *objects：要适配的数据
-     */
+
     public ShareActivityAdapter(Context context, int textViewResourceId,
                           List<ActivityInfo> objects) {
         super(context, textViewResourceId, objects);
