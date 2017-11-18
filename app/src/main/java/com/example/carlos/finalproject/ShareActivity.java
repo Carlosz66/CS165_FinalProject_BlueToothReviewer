@@ -44,6 +44,8 @@ public class ShareActivity extends AppCompatActivity {
     private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
     private static final int REQUEST_ENABLE_BT = 3;
 
+    private static final int REQUEST_ADD_ACTIVITY = 4;
+
 
     //bluetooth
     private BluetoothAdapter mBluetoothAdapter = null;//for communication
@@ -75,6 +77,9 @@ public class ShareActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
+
+        activityList= new LinkedList<>();
+
         readActivityDataFromDatabase();
         viewSetup();
         blueToothSetUp();
@@ -84,7 +89,7 @@ public class ShareActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), AddActivity.class);
-                startActivityForResult(intent,1);
+                startActivityForResult(intent,REQUEST_ADD_ACTIVITY);
             }
         });
     }
@@ -93,7 +98,7 @@ public class ShareActivity extends AppCompatActivity {
     public void readActivityDataFromDatabase() {
         // Displays all activities in a Toast
 
-        activityList= new LinkedList<>();
+        activityList.clear();
 
         DatabaseHelper myDbHelper = new DatabaseHelper(this);
         try {
@@ -323,6 +328,10 @@ public class ShareActivity extends AppCompatActivity {
                         activeRole=true;
                     }
                 }
+                break;
+            case REQUEST_ADD_ACTIVITY:
+                readActivityDataFromDatabase();
+                adapter.notifyDataSetChanged();
                 break;
         }
 
