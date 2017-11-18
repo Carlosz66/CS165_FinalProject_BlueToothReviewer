@@ -3,14 +3,34 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
-    <TextView
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:textSize="30dp"
-        android:gravity="center_horizontal"
-        android:text="Share Event"/>
+        android:gravity="center_horizontal|center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:textSize="30dp"
+            android:layout_marginRight="10dp"
+            android:gravity="end"
+            android:text="Scheduled Activities" />
+
+        <Button
+            android:id="@+id/addActivityButton"
+            android:layout_width="47dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/rounded_button"
+            android:text="+"
+            android:textSize="20dp"
+            android:layout_margin="15dp"/>
+
+    </LinearLayout>
+
     <ListView
         android:id="@+id/share_activity_list"
         android:layout_width="match_parent"

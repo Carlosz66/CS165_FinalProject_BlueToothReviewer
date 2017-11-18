@@ -163,8 +163,7 @@ public class AddActivity extends AppCompatActivity
         myDbHelper.close();
         Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
 
-
-        // Back to Main Activity
+        // Back to Share Activity
         finish();
     }
 

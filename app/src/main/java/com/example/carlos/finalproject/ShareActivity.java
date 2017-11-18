@@ -55,7 +55,7 @@ public class ShareActivity extends AppCompatActivity {
     private BluetoothChatService mChatService = null;
 
     //UI interface
-    Button tmpButton;
+    Button tmpButton, addActivityButton;
     ListView listView;
 
     //share_activity_list
@@ -78,6 +78,15 @@ public class ShareActivity extends AppCompatActivity {
         readActivityDataFromDatabase();
         viewSetup();
         blueToothSetUp();
+
+        addActivityButton = findViewById(R.id.addActivityButton);
+        addActivityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), AddActivity.class);
+                startActivityForResult(intent,1);
+            }
+        });
     }
 
     //read activity data from database
