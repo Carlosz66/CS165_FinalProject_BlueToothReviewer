@@ -183,7 +183,8 @@ public class AddActivity extends AppCompatActivity
             if (cursor2.moveToFirst()) {
                 do {
                     message = message + " --------- " + cursor2.getString(0) +','+ cursor2.getString(1)
-                            +','+ cursor2.getString(2)+','+ cursor2.getString(3)+','+ cursor2.getString(4);
+                            +','+ cursor2.getString(2)+','+ cursor2.getString(3)+','+ cursor2.getString(4)
+                            +','+ cursor2.getString(5);
                 }while (cursor2.moveToNext());
                 cursor2.close();
             }

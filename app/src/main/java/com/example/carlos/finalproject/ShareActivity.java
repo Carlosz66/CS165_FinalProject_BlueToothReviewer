@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.nfc.Tag;
 import android.os.Handler;
 import android.os.Message;
@@ -27,6 +28,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import static com.example.carlos.finalproject.Constants.RESULT_CONFIRM;
 import static com.example.carlos.finalproject.Constants.RESULT_DENY;
@@ -53,7 +57,7 @@ public class ShareActivity extends AppCompatActivity {
     ListView listView;
 
     //share_activity_list
-    List<String> activityList;
+    List<ActivityInfo> activityList;
     private ShareActivityAdapter adapter;
 
     //decide who start the connection
@@ -63,17 +67,41 @@ public class ShareActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
+        readActivityDataFromDatabase();
         viewSetup();
         blueToothSetUp();
     }
 
+    public void readActivityDataFromDatabase() {
+        // Displays all activities in a Toast
+
+        activityList= new LinkedList<>();
+
+        DatabaseHelper myDbHelper = new DatabaseHelper(this);
+        myDbHelper.openDataBase();
+        String query2 = "SELECT * FROM ScheduledActivity";
+        Cursor cursor2 = myDbHelper.getWritableDatabase().rawQuery(query2, null);
+        String message = "";
+
+        try {
+            if (cursor2.moveToFirst()) {
+                do {
+                    ActivityInfo act =  new ActivityInfo(cursor2.getString(0),cursor2.getString(1),cursor2.getString(2)
+                            ,cursor2.getString(3),cursor2.getString(4),cursor2.getString(5));
+                    activityList.add(act);
+                }while (cursor2.moveToNext());
+                cursor2.close();
+            }
+        } finally {
+            cursor2.close();
+            myDbHelper.close();
+        }
+
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
 
     private void viewSetup(){
-        //fake some data
-        activityList= new LinkedList<>();
-        activityList.add("Eat lunch at FOCUS --1:00PM");
-        activityList.add("Meeting at Berry Library --2:00PM");
-
         //listView set up
         listView = findViewById(R.id.share_activity_list);
         adapter = new ShareActivityAdapter
@@ -280,7 +308,8 @@ public class ShareActivity extends AppCompatActivity {
             case RESULT_CONFIRM:
                 //Log.d(TAG,"add activity");
                 if(receivedAct!=null) {
-                    activityList.add(receivedAct);
+                    Gson  gson = new Gson();
+                    activityList.add(gson.fromJson(receivedAct,ActivityInfo.class));
                     Log.d(TAG,"add activity");
                     adapter.notifyDataSetChanged();
                 }
@@ -303,9 +332,10 @@ public class ShareActivity extends AppCompatActivity {
         Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
         if(activeRole!=true)
             return;
-        if(!activityList.isEmpty() &&  mPosition<activityList.size())
-            sendMessage(activityList.get(mPosition));
-        else
+        if(!activityList.isEmpty() &&  mPosition<activityList.size()) {
+            Gson  gson = new Gson();
+            sendMessage(gson.toJson(activityList.get(mPosition)));
+        }else
             sendMessage("nothing");
     }
 

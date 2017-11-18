@@ -16,7 +16,7 @@ import java.util.List;
  * Created by Carlos on 17/11/16.
  */
 
-public class ShareActivityAdapter extends ArrayAdapter<String> {
+public class ShareActivityAdapter extends ArrayAdapter<ActivityInfo> {
     private int resourceId;
 
     public ShareActivity delegate;
@@ -26,7 +26,7 @@ public class ShareActivityAdapter extends ArrayAdapter<String> {
      *objects：要适配的数据
      */
     public ShareActivityAdapter(Context context, int textViewResourceId,
-                          List<String> objects) {
+                          List<ActivityInfo> objects) {
         super(context, textViewResourceId, objects);
         delegate= (ShareActivity) context;
         resourceId = textViewResourceId;
@@ -37,13 +37,14 @@ public class ShareActivityAdapter extends ArrayAdapter<String> {
         MyListener myListener=null;
         myListener=new MyListener(position);
 
-        String activityDes = getItem(position);
+        ActivityInfo activityDes = getItem(position);
         View view = LayoutInflater.from(getContext()).inflate(resourceId, null);
 
         TextView actDes = view.findViewById(R.id.shareActivityInCell);
         Button shaButton = view.findViewById(R.id.shareButtonInCell);
 
-        actDes.setText(activityDes);
+        actDes.setText("Activity: "+activityDes.actName +'\n'+"Location: "+activityDes.locName+'\n'
+        +"Time: "+activityDes.actTime);
         shaButton.setOnClickListener(myListener);
 
         return view;
