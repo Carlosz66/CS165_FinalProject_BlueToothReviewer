@@ -72,7 +72,7 @@ public class AddActivity extends AppCompatActivity
         checkWriteStoragePermissions();
 
         setTitle("Add Activity");
-        showActivities();
+        //showActivities();
 
         activityNameEditText = findViewById(R.id.activityNameEditText);
         activityLocationEditText = findViewById(R.id.activityLocationEditText);
