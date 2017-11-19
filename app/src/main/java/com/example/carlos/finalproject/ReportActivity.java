@@ -16,8 +16,11 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.sql.Time;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -127,17 +130,17 @@ public class ReportActivity extends AppCompatActivity {
 
             int j=0;
             DateFormat format = new SimpleDateFormat("HH:mm", Locale.ENGLISH);
-            Date dateA=Calendar.getInstance().getTime();
+            Time timeA = new Time(System.currentTimeMillis());
             try {
-                dateA = format.parse(realActivityList.get(i).actTime);
+                timeA = new java.sql.Time(format.parse(planActivityList.get(i).actTime).getTime());
             } catch (java.text.ParseException e) {
                 e.printStackTrace();
             }
             for(;j<realActivityList.size();j++){
                 try {
-                    Date dateB = format.parse(realActivityList.get(i).actTime);
-                    long diffMinutes = (dateA.getTime()-dateB.getTime()) / (60 * 1000) % 60;
-                    if(diffMinutes<30)
+                    Time timeB=new Time(format.parse(realActivityList.get(j).actTime).getTime());;
+                    long diffMinutes = (timeA.getTime()-timeB.getTime()) / (60 * 1000) % 60;
+                    if(Math.abs(diffMinutes)<5)
                         break;
                 } catch (java.text.ParseException e) {
                     e.printStackTrace();
