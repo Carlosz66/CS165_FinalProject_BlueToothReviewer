@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
@@ -14,6 +15,7 @@ import android.nfc.Tag;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -43,9 +45,7 @@ public class ShareActivity extends AppCompatActivity {
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
     private static final int REQUEST_CONNECT_DEVICE_INSECURE = 2;
     private static final int REQUEST_ENABLE_BT = 3;
-
     private static final int REQUEST_ADD_ACTIVITY = 4;
-
 
     //bluetooth
     private BluetoothAdapter mBluetoothAdapter = null;//for communication
@@ -96,8 +96,6 @@ public class ShareActivity extends AppCompatActivity {
 
     //read activity data from database
     public void readActivityDataFromDatabase() {
-        // Displays all activities in a Toast
-
         activityList.clear();
 
         DatabaseHelper myDbHelper = new DatabaseHelper(this);
@@ -126,8 +124,6 @@ public class ShareActivity extends AppCompatActivity {
             cursor2.close();
             myDbHelper.close();
         }
-
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     //set up the views
@@ -135,7 +131,7 @@ public class ShareActivity extends AppCompatActivity {
         //listView set up
         listView = findViewById(R.id.share_activity_list);
         adapter = new ShareActivityAdapter
-                (this, R.layout.shared_activity_list_cell,activityList);
+                (this, R.layout.shared_activity_list_cell, activityList);
         listView.setAdapter(adapter);
 
         tmpButton=findViewById(R.id.tempButton);
@@ -157,14 +153,11 @@ public class ShareActivity extends AppCompatActivity {
             Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
             this.finish();
         }
-
     }
-
 
     //set up for bluetooth communication
     private void setupChat() {
         Log.d(TAG, "setupChat()");
-
 
         // Initialize the BluetoothChatService to perform bluetooth connections
         mChatService = new BluetoothChatService(this, mHandler);
@@ -173,8 +166,6 @@ public class ShareActivity extends AppCompatActivity {
         // Initialize the buffer for outgoing messages
         mOutStringBuffer = new StringBuffer("");
     }
-
-
 
     //The Handler that gets information back from the BluetoothChatService
     @SuppressLint("HandlerLeak")
@@ -233,7 +224,6 @@ public class ShareActivity extends AppCompatActivity {
         }
     };
 
-
     /**
      * Sends a message.
      *
@@ -280,7 +270,6 @@ public class ShareActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     public void onResume() {
         super.onResume();
@@ -305,7 +294,6 @@ public class ShareActivity extends AppCompatActivity {
             mChatService.stop();
         }
     }
-
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -358,9 +346,62 @@ public class ShareActivity extends AppCompatActivity {
 
     //start the DeviceListActivity for choosing the device to connect through bluetooth
     public void shareActivityTo(int position){
-        mPosition=position;
+        mPosition = position;
         Intent intent = new Intent(getApplicationContext(), DeviceListActivity.class);
         startActivityForResult(intent,REQUEST_CONNECT_DEVICE_INSECURE);
+    }
+
+    public void deleteActivityAt(int position) {
+        mPosition = position;
+
+        String activityId = activityList.get(position).actId;
+        DatabaseHelper myDbHelper = new DatabaseHelper(this);
+
+        try {
+            myDbHelper.createDataBase();
+
+        } catch (IOException ioe) {
+            throw new Error("Unable to create database");
+        }
+
+        try {
+            myDbHelper.openDataBase();
+        }
+
+        catch (SQLException sqle) {
+            Toast.makeText(this, "Cannot connect to the database.", Toast.LENGTH_LONG).show();
+            throw sqle;
+        }
+
+        String query = "DELETE FROM ScheduledActivity WHERE _id = " + activityId;
+
+        Cursor cursor = myDbHelper.getWritableDatabase().rawQuery(query, null);
+        cursor.moveToFirst();
+
+        cursor.close();
+        myDbHelper.close();
+
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                        // update listView
+                        readActivityDataFromDatabase();
+                        adapter.notifyDataSetChanged();
+                        Toast.makeText(getApplicationContext(), "Activity Deleted", Toast.LENGTH_SHORT).show();
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        //No button clicked
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Are you sure you want to delete this activity?").setPositiveButton("Yes", dialogClickListener)
+                .setNegativeButton("No", dialogClickListener).show();
     }
 
     //send the activity info through bluetooth as JSON

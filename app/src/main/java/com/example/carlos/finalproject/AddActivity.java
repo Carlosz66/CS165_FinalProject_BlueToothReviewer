@@ -199,8 +199,6 @@ public class AddActivity extends AppCompatActivity
             cursor2.close();
             myDbHelper.close();
         }
-
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     //TODO: Check permissions on app start
@@ -254,10 +252,12 @@ public class AddActivity extends AppCompatActivity
                         map.setMyLocationEnabled(true);
                     }
 
-                } else {
+                }
 
+                else {
                     Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
                 }
+                
                 return;
             }
         }
