@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
         scheduleButton.setOnClickListener(new View.OnClickListener() {
                                               @Override
                                               public void onClick(View view) {
-                                                  checkPermissions();
                                                   Intent intent = new Intent(getApplicationContext(), ShareActivity.class);
                                                   startActivityForResult(intent,1);
                                               }
@@ -58,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        checkPermissions();
 //        Intent trackingService = new Intent(MainActivity.this,LocationService.class);
 //        startService(trackingService);
 

@@ -69,16 +69,19 @@ public class AddActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-
         setTitle("Add Activity");
         //showActivities();
 
         activityNameEditText = findViewById(R.id.activityNameEditText);
         activityLocationEditText = findViewById(R.id.activityLocationEditText);
 
+        // Set selected time to current time in case user doesn't change the default (current) time
         String delegate = "hh:mm aaa";
         String currentTime = (String)DateFormat.format(delegate, Calendar.getInstance().getTime());
-
+//        String hour = currentTime.split("\\:")[0];
+//        String minute = currentTime.split("\\:")[1];
+//        selectedTime = getTime(Integer.parseInt(hour), Integer.parseInt(minute));
+        selectedTime = currentTime;
 
         timeLabel = findViewById(R.id.timeLabel);
         timeLabel.setText(currentTime);
@@ -93,8 +96,8 @@ public class AddActivity extends AppCompatActivity
                 TimePickerDialog dialog = new TimePickerDialog(context, new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker timePicker, int selectedHour, int selectedMinute) {
-                        selectedTime = String.valueOf(selectedHour) + ":" + String.valueOf(selectedMinute);
-                        timeLabel.setText(getTime(selectedHour, selectedMinute));
+                        selectedTime = getTime(selectedHour, selectedMinute);
+                        timeLabel.setText(selectedTime);
                     }
                 }, 12, 0, false);
                 dialog.show();
@@ -196,8 +199,6 @@ public class AddActivity extends AppCompatActivity
             cursor2.close();
             myDbHelper.close();
         }
-
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     //TODO: Check permissions on app start
@@ -251,10 +252,12 @@ public class AddActivity extends AppCompatActivity
                         map.setMyLocationEnabled(true);
                     }
 
-                } else {
+                }
 
+                else {
                     Toast.makeText(this, "permission denied", Toast.LENGTH_LONG).show();
                 }
+                
                 return;
             }
         }
