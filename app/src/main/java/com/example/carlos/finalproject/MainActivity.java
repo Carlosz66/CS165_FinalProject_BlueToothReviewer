@@ -21,6 +21,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import lecho.lib.hellocharts.model.PieChartData;
+import lecho.lib.hellocharts.model.SliceValue;
+import lecho.lib.hellocharts.util.ChartUtils;
+import lecho.lib.hellocharts.view.PieChartView;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -40,13 +47,13 @@ public class MainActivity extends AppCompatActivity {
                                               }
                                           });
 
-        //TODO: Change to go to report page, link add activity to share activity
+
         LinearLayout reportButton = (LinearLayout)findViewById(R.id.report_layout);
         reportButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), AddActivity.class);
+                Intent intent = new Intent(getApplicationContext(), ReportActivity.class);
                 startActivityForResult(intent,1);
             }
         });
