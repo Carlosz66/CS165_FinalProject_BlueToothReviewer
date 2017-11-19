@@ -76,7 +76,7 @@ public class AddActivity extends AppCompatActivity
         activityLocationEditText = findViewById(R.id.activityLocationEditText);
 
         // Set selected time to current time in case user doesn't change the default (current) time
-        String delegate = "hh:mm aaa";
+        String delegate = "HH:mm";
         String currentTime = (String)DateFormat.format(delegate, Calendar.getInstance().getTime());
 //        String hour = currentTime.split("\\:")[0];
 //        String minute = currentTime.split("\\:")[1];
@@ -99,7 +99,7 @@ public class AddActivity extends AppCompatActivity
                         selectedTime = getTime(selectedHour, selectedMinute);
                         timeLabel.setText(selectedTime);
                     }
-                }, 12, 0, false);
+                }, 24, 0, true);
                 dialog.show();
             }
         });
@@ -116,7 +116,7 @@ public class AddActivity extends AppCompatActivity
     private String getTime(int hr,int min) {
         Time time = new Time(hr,min,0);//seconds by default set to zero
         Format formatter;
-        formatter = new SimpleDateFormat("h:mm a");
+        formatter = new SimpleDateFormat("HH:mm");
         return formatter.format(time);
     }
 
