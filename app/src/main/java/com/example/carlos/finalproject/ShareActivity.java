@@ -11,7 +11,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.database.SQLException;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.nfc.Tag;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.FragmentActivity;
@@ -28,18 +33,22 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+
 import static com.example.carlos.finalproject.Constants.RESULT_CONFIRM;
 import static com.example.carlos.finalproject.Constants.RESULT_DENY;
 
-public class ShareActivity extends AppCompatActivity {
+public class ShareActivity extends AppCompatActivity implements SensorEventListener{
     private static final String TAG = "ShareActivity";
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE_SECURE = 1;
@@ -73,12 +82,39 @@ public class ShareActivity extends AppCompatActivity {
     //indicate which button user click
     private int mPosition=0;
 
+    //sensor stuff
+    public class Tag{
+        long time;
+        double tag;
+        public Tag(long ts, double t){
+            this.time = ts;
+            this.tag = t;
+        }
+
+    }
+    private String curTag = "";
+    private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    private int shakeTime = 0;
+    private boolean onDetect = false;
+    private ArrayBlockingQueue<Tag> mBuffer;
+    private final int WINDOW_SIZE = 30;
+    private Filter filter;
+    private OnSensorChangedTask mAsyncTask;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
 
         activityList= new LinkedList<>();
+
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        mAsyncTask = new OnSensorChangedTask();
+        mBuffer = new ArrayBlockingQueue<>(WINDOW_SIZE);
 
         readActivityDataFromDatabase();
         viewSetup();
@@ -293,7 +329,18 @@ public class ShareActivity extends AppCompatActivity {
         if (mChatService != null) {
             mChatService.stop();
         }
+        if(mAsyncTask!=null){
+            mAsyncTask.cancel(true);
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        if(mSensorManager!=null)
+            stopDetect();
     }
+
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -407,6 +454,9 @@ public class ShareActivity extends AppCompatActivity {
     //send the activity info through bluetooth as JSON
     private void sendShareActivity(){
         Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
+        startDetect();
+
+
         if(activeRole!=true)
             return;
         if(!activityList.isEmpty() &&  mPosition<activityList.size()) {
@@ -456,4 +506,127 @@ public class ShareActivity extends AppCompatActivity {
         myDbHelper.close();
         Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
     }
+
+
+    private void startDetect(){
+        onDetect = true;
+        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        mAsyncTask.execute();
+
+        double SMOOTH_FACTOR = 0.1;
+        filter = new Filter(SMOOTH_FACTOR);
+    }
+
+    private void stopDetect() {
+        onDetect = false;
+        mSensorManager.unregisterListener(this);
+        mAsyncTask.cancel(true);
+        //Free filter and step detector
+        filter = null;
+
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+            float accel[] = sensorEvent.values;
+
+            //First, Get filtered values
+            double mag = Math.sqrt(accel[0] * accel[0] + accel[1] * accel[1] + accel[2] * accel[2]);
+            double smoothed = filter.getSmoothedValue(mag);
+
+            // Use blocking queue to reduce letency
+            try {
+                mBuffer.add(new Tag(System.currentTimeMillis(), smoothed));
+            } catch (IllegalStateException e) {
+
+                // Exception happens when reach the capacity.
+                // Doubling the buffer. ListBlockingQueue has no such issue,
+                // But generally has worse performance
+                ArrayBlockingQueue<Tag> newBuf = new ArrayBlockingQueue<>(
+                        mBuffer.size() * 2);
+
+                mBuffer.drainTo(newBuf);
+                mBuffer = newBuf;
+                mBuffer.add(new Tag(System.currentTimeMillis(), smoothed));
+            }
+
+
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    private class OnSensorChangedTask extends AsyncTask{
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            int blockSize = 0;
+            FFT fft = new FFT(64);
+            double[] accBlock = new double[64];
+            double[] re = accBlock;
+            double[] im = new double[64];
+
+            double max = Double.MIN_VALUE;
+            double min = Double.MAX_VALUE;
+
+
+            while(true){
+                try{
+                    if(isCancelled()) return null;
+                    Tag cur = mBuffer.take();
+                    accBlock[blockSize++] = cur.tag;
+
+                    if(blockSize==64) {
+                        blockSize = 0;
+                        max = .0;
+                        for (double val : accBlock) {
+                            if (max < val) {
+                                max = val;
+                            }
+                        }
+                        fft.fft(re, im);
+
+                        ArrayList<Double> featVect = new ArrayList<Double>();
+                        for (int i = 0; i < re.length; i++) {
+                            double mag = Math.sqrt(re[i] * re[i] + im[i]
+                                    * im[i]);
+                            //inst.setValue(i, mag);
+                            featVect.add(mag);
+                            im[i] = .0; // Clear the field
+                        }
+                        featVect.add(max);
+                        Object[] array = (Object[]) featVect.toArray();
+                        double rv = .0;
+                        rv = WekaClassifier.classify(array);
+                        Log.d("cur tag",rv+"");
+
+                        if (rv < 0.2){
+                            //suppose it is shake
+                            curTag = "class1";
+                            stopDetect();
+                            //TODO: share by bluetooth
+                        }
+                        else if (rv < 1.2)
+                            curTag = "class2";
+                        else
+                            curTag = "class3";
+                        publishProgress();
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            return;
+        }
+    }
+
 }
