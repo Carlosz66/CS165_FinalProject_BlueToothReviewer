@@ -96,6 +96,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         myDataBase = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
 
     }
+
+
     @Override
     public synchronized void close() {
 

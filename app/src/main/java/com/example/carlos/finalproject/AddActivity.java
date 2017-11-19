@@ -69,8 +69,9 @@ public class AddActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+
         setTitle("Add Activity");
-        showActivities();
+        //showActivities();
 
         activityNameEditText = findViewById(R.id.activityNameEditText);
         activityLocationEditText = findViewById(R.id.activityLocationEditText);
@@ -105,6 +106,7 @@ public class AddActivity extends AppCompatActivity
                 onAddButtonClicked();
             }
         });
+
     }
 
     // converts military time to AM/PM
@@ -116,6 +118,7 @@ public class AddActivity extends AppCompatActivity
     }
 
     private void onAddButtonClicked() {
+        showActivities();
         if (activityNameEditText.getText().length() == 0) {
             Toast.makeText(this, "Please enter valid values in all fields.", Toast.LENGTH_SHORT).show();
         }
@@ -160,6 +163,7 @@ public class AddActivity extends AppCompatActivity
         myDbHelper.close();
         Toast.makeText(this, "Activity Added", Toast.LENGTH_SHORT).show();
 
+
         // Back to Main Activity
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivityForResult(intent,1);
@@ -178,10 +182,10 @@ public class AddActivity extends AppCompatActivity
         try {
             if (cursor2.moveToFirst()) {
                 do {
-                    message = message + " - " + cursor2.getString(0);
-                }
-
-                while (cursor2.moveToNext());
+                    message = message + " --------- " + cursor2.getString(0) +','+ cursor2.getString(1)
+                            +','+ cursor2.getString(2)+','+ cursor2.getString(3)+','+ cursor2.getString(4)
+                            +','+ cursor2.getString(5);
+                }while (cursor2.moveToNext());
                 cursor2.close();
             }
         } finally {
@@ -328,4 +332,5 @@ public class AddActivity extends AppCompatActivity
             }
         }
     }
+
 }
