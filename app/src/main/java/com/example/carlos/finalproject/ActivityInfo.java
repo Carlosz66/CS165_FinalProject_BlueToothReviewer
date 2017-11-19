@@ -12,6 +12,8 @@ public class ActivityInfo {
     public String lat;
     public String actTime;
 
+    public String locType;
+
     public ActivityInfo(String actName, String id, String locName, String lng, String lat, String time) {
         this.actName = actName;
         this.actId = id;
@@ -19,6 +21,14 @@ public class ActivityInfo {
         this.lng = lng;
         this.lat = lat;
         this.actTime = time;
+    }
+
+    public ActivityInfo(String id, String lat, String lng, String time, String locType) {
+        this.actId = id;
+        this.lng = lng;
+        this.lat = lat;
+        this.actTime = time;
+        this.locType=locType;
     }
 
 }
