@@ -15,7 +15,16 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:text="Share"/>
+        android:text="Share"
+        android:textSize="10dp"/>
+
+    <Button
+        android:id="@+id/delButttonInCell"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="Delete"
+        android:textSize="10dp"/>
 
 
 </LinearLayout>

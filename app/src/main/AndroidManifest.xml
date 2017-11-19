@@ -27,7 +27,7 @@
             android:name=".DeviceListActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/select_device"
-            android:theme="@android:style/Theme.Holo.Dialog" />
+            android:theme="@android:style/Theme.Holo.Dialog"/>
         <activity android:name=".ShareActivity" />
         <activity
             android:name=".AddSharedTaskActivity"
@@ -38,15 +38,17 @@
             android:configChanges="orientation|keyboardHidden"
             android:windowSoftInputMode="adjustNothing" />
 
+        <activity
+            android:name=".ReportActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:windowSoftInputMode="adjustNothing" />
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
         <meta-data
         android:name="com.google.android.geo.API_KEY"
         android:value="AIzaSyAkaphuE8kPdQoTch8uqjKeMnePysovfro" />
-
-
-
 
         <service
             android:name=".LocationService"
