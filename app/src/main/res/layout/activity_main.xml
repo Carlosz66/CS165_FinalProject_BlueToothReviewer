@@ -102,7 +102,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:text="Tracking"
+                    android:text="Tracking: ON"
                     android:textSize="30dp" />
 
                 <TextView
@@ -110,7 +110,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_horizontal"
-                    android:text="Start/Stop tracking on background"
+                    android:text="Record location in real time by Default."
                     android:textSize="15dp"/>
 
             </LinearLayout>

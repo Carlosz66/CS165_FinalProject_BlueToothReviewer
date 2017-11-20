@@ -32,6 +32,8 @@ import lecho.lib.hellocharts.view.PieChartView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private TextView trackSwitch;
+    private boolean isTracking = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,14 +59,32 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        LinearLayout tracking = (LinearLayout)findViewById(R.id.tracking_layout);
+        final LinearLayout tracking = (LinearLayout)findViewById(R.id.tracking_layout);
+        trackSwitch = (TextView) findViewById(R.id.trackingTitle);
         tracking.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent trackingService = new Intent(MainActivity.this, LocationService.class);
+                if(isTracking){
+                    //STOP TRACKING
+                    Log.d("stop","tracking");
+                    trackingService.setAction("stopTracking");
+                    trackSwitch.setText("Track: OFF");
+                }else{
+                    //START TRACKING
+                    Log.d("start","tracking");
+                    trackingService.setAction("startTracking");
+                    trackSwitch.setText("Track: ON");
+                }
+                isTracking = !isTracking;
                 startService(trackingService);
             }
         });
+
+        Intent trackingService = new Intent(MainActivity.this, LocationService.class);
+        trackingService.setAction("startTracking");
+        startService(trackingService);
+
         checkPermissions();
     }
 

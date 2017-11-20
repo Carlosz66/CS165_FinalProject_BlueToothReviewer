@@ -113,7 +113,6 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
 
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-        mAsyncTask = new OnSensorChangedTask();
         mBuffer = new ArrayBlockingQueue<>(WINDOW_SIZE);
 
         readActivityDataFromDatabase();
@@ -170,13 +169,13 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                 (this, R.layout.shared_activity_list_cell, activityList);
         listView.setAdapter(adapter);
 
-        tmpButton=findViewById(R.id.tempButton);
-        tmpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendShareActivity();
-            }
-        });
+//        tmpButton=findViewById(R.id.tempButton);
+//        tmpButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                sendShareActivity();
+//            }
+//        });
     }
 
 
@@ -213,6 +212,7 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                     switch (msg.arg1) {
                         case BluetoothChatService.STATE_CONNECTED:
                             Log.d(TAG, "connected!!!!!!!!!!!!!!!!!!!!!!");
+                            startDetect();
                             break;
                         case BluetoothChatService.STATE_CONNECTING:
                             //Toast.makeText(getApplicationContext(), "STATE_CONNECTING", Toast.LENGTH_LONG).show();
@@ -335,6 +335,8 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                e.getMessage();
+                Log.d("error",e.getMessage());
             }
         }
         if(mSensorManager!=null)
@@ -454,9 +456,20 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
     //send the activity info through bluetooth as JSON
     private void sendShareActivity(){
         Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
+        //TODO: this function need to be moved after the bluethooth connection is built
         startDetect();
 
+//        if(activeRole!=true)
+//            return;
+//        if(!activityList.isEmpty() &&  mPosition<activityList.size()) {
+//            Gson  gson = new Gson();
+//            sendMessage(gson.toJson(activityList.get(mPosition)));
+//        }else
+//            sendMessage("nothing");
+    }
 
+    private void shareEvent(){
+        //share event
         if(activeRole!=true)
             return;
         if(!activityList.isEmpty() &&  mPosition<activityList.size()) {
@@ -508,20 +521,34 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
     }
 
 
+    /*create a new asyncTack for sensor detecting*/
     private void startDetect(){
+        if(!onDetect){
+            mAsyncTask = new OnSensorChangedTask();
+            mAsyncTask.execute();
+            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+        else{
+            return;
+        }
         onDetect = true;
-        mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-        mAsyncTask.execute();
 
         double SMOOTH_FACTOR = 0.1;
         filter = new Filter(SMOOTH_FACTOR);
     }
 
+
+    /*stop the running asyncTack and release space*/
     private void stopDetect() {
+        Log.d("detect","stop");
+        if(mAsyncTask!=null && mAsyncTask.getStatus()==AsyncTask.Status.RUNNING) {
+            mSensorManager.unregisterListener(this);
+            mAsyncTask.cancel(true);
+        }else {
+            return;
+        }
+
         onDetect = false;
-        mSensorManager.unregisterListener(this);
-        mAsyncTask.cancel(true);
-        //Free filter and step detector
         filter = null;
 
     }
@@ -570,13 +597,19 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
             double[] re = accBlock;
             double[] im = new double[64];
 
-            double max = Double.MIN_VALUE;
-            double min = Double.MAX_VALUE;
+            double max;
 
+            //parameters to set up sliding window
+            Queue<Double> window = new LinkedList<>();
+            int window_size = 15;
+            double threshold = 0.65;
+            int[] tagCnt = new int[4];
 
             while(true){
                 try{
-                    if(isCancelled()) return null;
+                    if(this.isCancelled()){
+                        return null;
+                    }
                     Tag cur = mBuffer.take();
                     accBlock[blockSize++] = cur.tag;
 
@@ -594,7 +627,6 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                         for (int i = 0; i < re.length; i++) {
                             double mag = Math.sqrt(re[i] * re[i] + im[i]
                                     * im[i]);
-                            //inst.setValue(i, mag);
                             featVect.add(mag);
                             im[i] = .0; // Clear the field
                         }
@@ -602,25 +634,38 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                         Object[] array = (Object[]) featVect.toArray();
                         double rv = .0;
                         rv = WekaClassifier.classify(array);
-                        Log.d("cur tag",rv+"");
+                        Log.d("classifier",rv+"");
 
-                        if (rv < 0.2){
-                            //suppose it is shake
-                            curTag = "class1";
-                            stopDetect();
-                            //TODO: share by bluetooth
+                        window.offer(rv);
+                        tagCnt[(int)rv]++;
+
+                        //determine the kind of activity of a fixed time
+                        if(window.size()>window_size){
+                            int tmp = (int) Math.floor(window.remove());
+                            tagCnt[tmp]--;
+                            if(tagCnt[0] > window_size*threshold || tagCnt[1] > window_size*threshold){
+                                Log.d("detected","wthhhhhhhh");
+                                shareEvent();
+                                stopDetect();
+                            }
                         }
-                        else if (rv < 1.2)
-                            curTag = "class2";
-                        else
-                            curTag = "class3";
-                        publishProgress();
                     }
                 }catch (Exception e){
                     e.printStackTrace();
                 }
 
             }
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+        }
+
+        @Override
+        protected void onProgressUpdate(Object[] values) {
+            super.onProgressUpdate(values);
+            stopDetect();
         }
 
         @Override

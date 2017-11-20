@@ -28,7 +28,8 @@
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/select_device"
             android:theme="@android:style/Theme.Holo.Dialog"/>
-        <activity android:name=".ShareActivity" />
+        <activity android:name=".ShareActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".AddSharedTaskActivity"
             android:configChanges="orientation|keyboardHidden"
@@ -42,6 +43,7 @@
             android:name=".ReportActivity"
             android:configChanges="orientation|keyboardHidden"
             android:windowSoftInputMode="adjustNothing" />
+
 
         <meta-data
             android:name="com.google.android.gms.version"

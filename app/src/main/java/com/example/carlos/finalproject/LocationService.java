@@ -44,19 +44,21 @@ import com.google.android.gms.location.LocationServices;
 public class LocationService extends Service implements GoogleApiClient.OnConnectionFailedListener
         , GoogleApiClient.ConnectionCallbacks {
 
-
     private LocationManager mLocationManager;
     private LocationListener mLocationListener;
     private Handler mHandler;
     private Runnable onRequestLocation;
-    private int cnt;
     DatabaseHelper mDbHelper;
 
     public Criteria criteria;
     private Location lastKnownLocation, curLocation;
     private GoogleApiClient mGoogleApiClient;
 
+    //REAL
+//    private long UPDATE_DURATION = 30000L;
+    //FOR DEMO
     private long UPDATE_DURATION = 10000L;
+
 
     public LocationService() {
 
@@ -70,71 +72,68 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.d("onStartCommand", "on");
+        if (intent.getAction().equals("startTracking")) {
+            Log.d("onStartCommand", "on");
 
-        lastKnownLocation = null;
-        curLocation = null;
+            Toast.makeText(this,"Start Service",Toast.LENGTH_SHORT).show();
 
-        //set up the criteria for provider
-        criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setAltitudeRequired(false);
-        criteria.setSpeedRequired(true);
-        criteria.setPowerRequirement(Criteria.POWER_LOW);
-        criteria.setBearingAccuracy(Criteria.ACCURACY_HIGH);
-        criteria.setSpeedAccuracy(Criteria.ACCURACY_HIGH);
-        criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-        criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
+            lastKnownLocation = null;
+            curLocation = null;
 
-        mDbHelper = new DatabaseHelper(getApplicationContext());
+            //set up the criteria for provider
+            criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setAltitudeRequired(false);
+            criteria.setSpeedRequired(true);
+            criteria.setPowerRequirement(Criteria.POWER_LOW);
+            criteria.setBearingAccuracy(Criteria.ACCURACY_HIGH);
+            criteria.setSpeedAccuracy(Criteria.ACCURACY_HIGH);
+            criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+            criteria.setVerticalAccuracy(Criteria.ACCURACY_HIGH);
 
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        mLocationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                curLocation = location;
-                DateFormat df = new SimpleDateFormat("HH:mm");
-                String time = df.format(Calendar.getInstance().getTime());
+            mDbHelper = new DatabaseHelper(getApplicationContext());
 
-                String str = location.toString();
-                Toast.makeText(getApplicationContext(), "cur location" + str + " " + time, Toast.LENGTH_SHORT);
-                updateActualLocation(location, time);
-                mLocationManager.removeUpdates(mLocationListener);
-            }
-
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
-            }
-        };
-        cnt = 0;
-
-        mHandler = new Handler();
-        onRequestLocation = new Runnable() {
-            @Override
-            public void run() {
-                cnt++;
-                Toast.makeText(getApplicationContext(), cnt+"wtffffff", Toast.LENGTH_SHORT);
-
-                if (ActivityCompat.checkSelfPermission(getApplication(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                        && ActivityCompat.checkSelfPermission(getApplication(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    return;
+            mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            mLocationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(Location location) {
+                    curLocation = location;
+                    DateFormat df = new SimpleDateFormat("HH:mm");
+                    String time = df.format(Calendar.getInstance().getTime());
+                    updateActualLocation(location, time);
+                    mLocationManager.removeUpdates(mLocationListener);
                 }
 
-                //String provider = mLocationManager.getBestProvider(criteria, true);
-                //Toast.makeText(getApplication(),"the"+cnt+" "+provider,Toast.LENGTH_SHORT).show();
-                //use recommended provider
-                //mLocationManager.requestLocationUpdates(provider,0,0,mLocationListener);
-                //use network provider
-                mLocationManager.requestLocationUpdates(mLocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-                Toast.makeText(getApplicationContext(),mGoogleApiClient.isConnected()+"",Toast.LENGTH_SHORT).show();
+                @Override
+                public void onStatusChanged(String s, int i, Bundle bundle) {
+                }
+
+                @Override
+                public void onProviderEnabled(String s) {
+                }
+
+                @Override
+                public void onProviderDisabled(String s) {
+                }
+            };
+
+            mHandler = new Handler();
+            onRequestLocation = new Runnable() {
+                @Override
+                public void run() {
+                    if (ActivityCompat.checkSelfPermission(getApplication(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(getApplication(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+
+                    //String provider = mLocationManager.getBestProvider(criteria, true);
+                    //Toast.makeText(getApplication(),"the"+cnt+" "+provider,Toast.LENGTH_SHORT).show();
+                    //use recommended provider
+                    //mLocationManager.requestLocationUpdates(provider,0,0,mLocationListener);
+
+                    //use network provider
+                    mLocationManager.requestLocationUpdates(mLocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+                    mHandler.postDelayed(onRequestLocation, UPDATE_DURATION);
 
 //                //use place api
 //                if(!mGoogleApiClient.isConnected()) buildGoogleApiClient();
@@ -169,27 +168,39 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
 //                    }
 //                });
 
-                Toast.makeText(getApplicationContext(), cnt+"wtffffff", Toast.LENGTH_SHORT).show();
-                mHandler.postDelayed(onRequestLocation, UPDATE_DURATION);
-                showActivities();
-            }
-        };
+//                    mHandler.postDelayed(onRequestLocation, UPDATE_DURATION);
+//                    showActivities();
+                }
+            };
 
-        mHandler.post(onRequestLocation);
+            mHandler.post(onRequestLocation);
+        }else if(intent.getAction().equals("stopTracking")){
+            Log.d("onStartCommand", "off");
+            Toast.makeText(this,"Stop Service",Toast.LENGTH_SHORT).show();
+            if (mHandler != null) {
+                mHandler.removeCallbacks(onRequestLocation);
+            }
+            stopSelf();
+
+        }
         return START_STICKY;
     }
 
 
+    /**
+     *
+     * @param location
+     * @param time
+     *
+     * function for record location data with mock up type into database
+     */
     private void updateActualLocation(Location location, String time) {
 
-        //try create database if it doesn't exist
         try {
             mDbHelper.createDataBase();
         } catch (IOException e) {
             throw new Error("Unable to create database");
         }
-
-        //try open database if it doesn't exist
         try {
             mDbHelper.openDataBase();
         } catch (SQLException e) {
@@ -204,9 +215,15 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
         cur.moveToFirst();
         cur.close();
         mDbHelper.close();
-        Toast.makeText(getApplicationContext(), query, Toast.LENGTH_LONG).show();
     }
 
+    /**
+     *
+     * @param place
+     * @param time
+     *
+     * function for insert location data with type into database
+     */
     private void updateActualPlace(Place place, String time) {
 
         try {
@@ -232,8 +249,9 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
         cur.moveToFirst();
         cur.close();
         mDbHelper.close();
-        Toast.makeText(getApplicationContext(), query, Toast.LENGTH_LONG).show();
+        //Toast.makeText(getApplicationContext(), query, Toast.LENGTH_LONG).show();
     }
+
 
     public void showActivities() {
         // Displays all activities in a Toast
@@ -270,7 +288,7 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
             mDbHelper.close();
         }
 
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+       // Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 
     @Override
