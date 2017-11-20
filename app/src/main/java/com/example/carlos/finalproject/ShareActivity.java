@@ -232,7 +232,6 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
                     Log.d(TAG,writeMessage);
-                    Toast.makeText(getApplicationContext(), "write: "+writeMessage, Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
