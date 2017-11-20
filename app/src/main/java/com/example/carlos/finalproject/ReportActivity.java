@@ -62,7 +62,7 @@ public class ReportActivity extends AppCompatActivity {
 
         dict = new HashMap<>();
         dict.put("0","Apartment");
-        dict.put("1","Resturant");
+        dict.put("1","Restaurant");
         dict.put("2","Library");
         dict.put("3","Road");
         dict.put("4","Campus");
