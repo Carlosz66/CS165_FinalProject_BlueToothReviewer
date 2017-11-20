@@ -75,8 +75,6 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
         if (intent.getAction().equals("startTracking")) {
             Log.d("onStartCommand", "on");
 
-            Toast.makeText(this,"Start Service",Toast.LENGTH_SHORT).show();
-
             lastKnownLocation = null;
             curLocation = null;
 
@@ -176,7 +174,6 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
             mHandler.post(onRequestLocation);
         }else if(intent.getAction().equals("stopTracking")){
             Log.d("onStartCommand", "off");
-            Toast.makeText(this,"Stop Service",Toast.LENGTH_SHORT).show();
             if (mHandler != null) {
                 mHandler.removeCallbacks(onRequestLocation);
             }

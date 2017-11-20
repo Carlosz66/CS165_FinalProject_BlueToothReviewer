@@ -232,14 +232,13 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                     // construct a string from the buffer
                     String writeMessage = new String(writeBuf);
                     Log.d(TAG,writeMessage);
-                    Toast.makeText(getApplicationContext(), "write: "+writeMessage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Event shared", Toast.LENGTH_LONG).show();
                     break;
                 case Constants.MESSAGE_READ:
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     Log.d(TAG,readMessage);
-                    Toast.makeText(getApplicationContext(), "read: "+readMessage, Toast.LENGTH_LONG).show();
                     if (!readMessage.isEmpty()){
                         startConfirmReceivedTask(readMessage);
                     }
