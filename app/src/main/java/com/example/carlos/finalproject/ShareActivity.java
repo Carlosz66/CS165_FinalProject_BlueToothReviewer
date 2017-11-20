@@ -48,6 +48,10 @@ import com.google.gson.reflect.TypeToken;
 import static com.example.carlos.finalproject.Constants.RESULT_CONFIRM;
 import static com.example.carlos.finalproject.Constants.RESULT_DENY;
 
+
+/*
+* code related to sensor data process is modified from the sample code of CS169 Mobile Sensing Winter2016
+* */
 public class ShareActivity extends AppCompatActivity implements SensorEventListener{
     private static final String TAG = "ShareActivity";
     // Intent request codes
@@ -454,18 +458,10 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
     }
 
     //send the activity info through bluetooth as JSON
+    //test use
     private void sendShareActivity(){
         Log.d(TAG, "writing!!!!!!!!!!!!!!!!!!!!!!");
-        //TODO: this function need to be moved after the bluethooth connection is built
         startDetect();
-
-//        if(activeRole!=true)
-//            return;
-//        if(!activityList.isEmpty() &&  mPosition<activityList.size()) {
-//            Gson  gson = new Gson();
-//            sendMessage(gson.toJson(activityList.get(mPosition)));
-//        }else
-//            sendMessage("nothing");
     }
 
     private void shareEvent(){
@@ -521,7 +517,9 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
     }
 
 
-    /*create a new asyncTack for sensor detecting*/
+    /**
+     * create a new asyncTack for sensor detecting
+     * */
     private void startDetect(){
         if(!onDetect){
             mAsyncTask = new OnSensorChangedTask();
@@ -538,7 +536,9 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
     }
 
 
-    /*stop the running asyncTack and release space*/
+    /**
+     * stop the running asyncTack and release space
+     * */
     private void stopDetect() {
         Log.d("detect","stop");
         if(mAsyncTask!=null && mAsyncTask.getStatus()==AsyncTask.Status.RUNNING) {
