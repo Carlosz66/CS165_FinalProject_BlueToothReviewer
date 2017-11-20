@@ -71,7 +71,7 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
+        if (intent == null) return START_NOT_STICKY;
         if (intent.getAction().equals("startTracking")) {
             Log.d("onStartCommand", "on");
 

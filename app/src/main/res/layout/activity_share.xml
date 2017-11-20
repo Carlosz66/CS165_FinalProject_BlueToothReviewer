@@ -38,10 +38,10 @@
         android:layout_weight="8"
         android:layout_margin="7dp">
     </ListView>
-    <Button
-        android:id="@+id/tempButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="temp_Button_For_Send"/>
+    <!--<Button-->
+        <!--android:id="@+id/tempButton"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="temp_Button_For_Send"/>-->
 
 </LinearLayout>
