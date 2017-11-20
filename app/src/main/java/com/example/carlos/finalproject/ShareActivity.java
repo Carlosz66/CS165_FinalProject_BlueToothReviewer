@@ -601,8 +601,8 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
 
             //parameters to set up sliding window
             Queue<Double> window = new LinkedList<>();
-            int window_size = 15;
-            double threshold = 0.65;
+            int window_size = 6;
+            double threshold = 0.5;
             int[] tagCnt = new int[4];
 
             while(true){
