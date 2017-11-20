@@ -33,7 +33,10 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.Inet4Address;
+import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -163,6 +166,20 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
             cursor2.close();
             myDbHelper.close();
         }
+
+
+        if (!activityList.isEmpty()) {
+            Collections.sort(activityList, new Comparator<ActivityInfo>() {
+                @Override
+                public int compare(ActivityInfo object1,
+                                   ActivityInfo object2) {
+
+                    //return ((String) object1.get("text_content")).compareTo((String) object2.get("text_content"));
+                    return object1.actTime.compareTo(object2.actTime);
+                }
+            });
+        }
+
     }
 
     //set up the views
@@ -382,11 +399,14 @@ public class ShareActivity extends AppCompatActivity implements SensorEventListe
                     Gson  gson = new Gson();
                     ActivityInfo act  = gson.fromJson(receivedAct,ActivityInfo.class);
                     //to update the view
-                    activityList.add(act);
+                    //activityList.add(act);
                     Log.d(TAG,"add activity");
-                    adapter.notifyDataSetChanged();
+                    //adapter.notifyDataSetChanged();
                     //to database
                     addActivityToDb(act);
+                    //update the view
+                    readActivityDataFromDatabase();
+                    adapter.notifyDataSetChanged();
                 }
                 receivedAct=null;
                 break;
