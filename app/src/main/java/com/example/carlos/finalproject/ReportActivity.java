@@ -23,6 +23,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -214,6 +216,19 @@ public class ReportActivity extends AppCompatActivity {
             cursor2.close();
             myDbHelper.close();
         }
+
+        if (!planActivityList.isEmpty()) {
+            Collections.sort(planActivityList, new Comparator<ActivityInfo>() {
+                @Override
+                public int compare(ActivityInfo object1,
+                                   ActivityInfo object2) {
+
+                    //return ((String) object1.get("text_content")).compareTo((String) object2.get("text_content"));
+                    return object1.actTime.compareTo(object2.actTime);
+                }
+            });
+        }
+
     }
 
 
