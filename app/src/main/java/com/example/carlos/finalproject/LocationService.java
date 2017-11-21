@@ -71,7 +71,8 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent == null) return START_NOT_STICKY;
+
+
         if (intent.getAction().equals("startTracking")) {
             Log.d("onStartCommand", "on");
 
@@ -96,6 +97,8 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
                 @Override
                 public void onLocationChanged(Location location) {
                     curLocation = location;
+                    String str = "Location update:"+location.getLongitude()+","+location.getLatitude();
+                    Toast.makeText(getApplicationContext(),str,Toast.LENGTH_SHORT).show();
                     DateFormat df = new SimpleDateFormat("HH:mm");
                     String time = df.format(Calendar.getInstance().getTime());
                     updateActualLocation(location, time);
@@ -133,7 +136,7 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
                     mLocationManager.requestLocationUpdates(mLocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
                     mHandler.postDelayed(onRequestLocation, UPDATE_DURATION);
 
-//                //use place api
+//                //use place api to get current location and the type of current location
 //                if(!mGoogleApiClient.isConnected()) buildGoogleApiClient();
 //
 //                PendingResult<PlaceLikelihoodBuffer> result = Places.PlaceDetectionApi.getCurrentPlace(mGoogleApiClient,null);
@@ -165,8 +168,8 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
 //
 //                    }
 //                });
-
-//                    mHandler.postDelayed(onRequestLocation, UPDATE_DURATION);
+//
+//                mHandler.postDelayed(onRequestLocation, UPDATE_DURATION);
 //                    showActivities();
                 }
             };
@@ -204,7 +207,7 @@ public class LocationService extends Service implements GoogleApiClient.OnConnec
             throw e;
         }
 
-        //Type mock up
+        //Type mock up when use network provider
         int type = (int)Math.floor(Math.random() * 5);
         String query = "INSERT INTO ActualActivity (LocationLat,LocationLon,StartTime,Type) VALUES ('" + location.getLatitude()
                 + "','" + location.getLongitude() + "','" + time + "','" + type + "')";
